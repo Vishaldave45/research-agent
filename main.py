@@ -1,5 +1,5 @@
 """
-Quick manual test runner for Phases 1-9.
+Quick manual test runner for Phases 1-10.
 uv run python main.py
 """
 from chains.chatbot_chain import ask
@@ -10,6 +10,7 @@ from models.vectorstore import build_vectorstore
 from chains.rag_chain import ask_with_sources
 from chains.memory_chain import chat
 from chains.agent_chain import run_agent
+from chains.structured_chain import research, summarize, fact_check
 
 
 
@@ -55,6 +56,23 @@ def main():
     print(f"\nAnswer: {result['answer']}")
     print(f"Tools used: {result['tools_used']}")
 
+    print("\n" + "=" * 60)
+    print("PHASE 10 - Structured Output")
+    print("=" * 60)
+    
+    print("Running Structured Research Chain...")
+    res_struct = research("LangChain Agents")
+    print(f"Topic: {res_struct.topic}")
+    print(f"Findings: {res_struct.findings}")
+    print(f"Confidence: {res_struct.confidence}")
+    
+    print("\nRunning Structured Fact Checking Chain...")
+    fc_struct = fact_check("The Sun is a star.")
+    print(f"Verdict: {fc_struct.verdict}")
+    print(f"Evidence: {fc_struct.evidence}")
+    print(f"Confidence: {fc_struct.confidence}")
+
 
 if __name__ == "__main__":
     main()
+

@@ -18,6 +18,14 @@ from chains.rag_chain import ask_with_sources
 from loaders.document_loader import load_file
 from loaders.text_splitter import split_documents
 from models.vectorstore import build_vectorstore, add_documents
+from chains.structured_chain import (
+    research as run_research,
+    summarize as run_summarize,
+    fact_check as run_fact_check,
+    ask_structured as run_qa,
+    generate_report as run_report,
+)
+
 
 st.set_page_config(
     page_title="AI Research Assistant",
@@ -26,11 +34,18 @@ st.set_page_config(
 )
 
 st.title("🔎 AI Research Assistant")
-st.caption("LangChain + Gemini + FAISS  ·  Phases 1–7")
+st.caption("LangChain + Gemini + FAISS  ·  Phases 1–10")
 
-tab_chat, tab_memory, tab_upload, tab_rag = st.tabs(
-    ["💬 Basic Chat", "🧠 Memory Chat", "📄 Upload Documents", "📚 Ask Your Documents (RAG)"]
+tab_chat, tab_memory, tab_upload, tab_rag, tab_structured = st.tabs(
+    [
+        "💬 Basic Chat",
+        "🧠 Memory Chat",
+        "📄 Upload Documents",
+        "📚 Ask Your Documents (RAG)",
+        "🧩 Structured Output",
+    ]
 )
+
 
 # ── Tab 1: Phase 1 - Basic Chatbot ──────────────────────────────────────────
 with tab_chat:
@@ -151,6 +166,148 @@ with tab_rag:
                     st.error(f"Error: {e}")
         else:
             st.warning("Type a question first.")
+
+# ── Tab 5: Phase 10 - Structured Output ──────────────────────────────────────
+with tab_structured:
+    st.subheader("Structured Agent Outputs")
+    st.caption("Validates LLM responses against strict Pydantic schemas aligned with Phase 12 agents.")
+
+    agent_type = st.selectbox(
+        "Select Agent / Output Schema",
+        [
+            "🔍 Research Agent (ResearchResult)",
+            "📝 Summarization Agent (SummaryResult)",
+            "✅ Fact Checking Agent (FactCheckResult)",
+            "💬 Question Answering Agent (QAResult)",
+            "📄 Report Writing Agent (ReportResult)"
+        ]
+    )
+
+    if agent_type == "🔍 Research Agent (ResearchResult)":
+        topic = st.text_input("Enter research topic:", placeholder="e.g. LangGraph Framework")
+        if st.button("Research Topic", key="btn_research"):
+            if topic.strip():
+                with st.spinner("Researching..."):
+                    try:
+                        res = run_research(topic)
+                        st.markdown("### 🔍 Research Result")
+                        st.metric("Confidence Score", f"{res.confidence * 100:.1f}%")
+                        st.info(f"**Topic:** {res.topic}")
+                        st.markdown("#### Key Findings")
+                        for finding in res.findings:
+                            st.write(f"- {finding}")
+                        if res.sources:
+                            st.markdown("#### Sources")
+                            for src in res.sources:
+                                st.write(f"- {src}")
+                        
+                        with st.expander("Raw Pydantic JSON"):
+                            st.json(res.model_dump())
+                    except Exception as e:
+                        st.error(f"Error: {e}")
+            else:
+                st.warning("Please enter a topic.")
+
+    elif agent_type == "📝 Summarization Agent (SummaryResult)":
+        text_to_sum = st.text_area("Enter text to summarize:", height=150)
+        if st.button("Summarize", key="btn_sum"):
+            if text_to_sum.strip():
+                with st.spinner("Summarizing..."):
+                    try:
+                        res = run_summarize(text_to_sum)
+                        st.markdown("### 📝 Summary Result")
+                        st.success(f"**Title:** {res.title}")
+                        st.write(f"**Summary:** {res.summary}")
+                        st.markdown("#### Key Points")
+                        for pt in res.key_points:
+                            st.write(f"- {pt}")
+                        st.write(f"**Estimated Word Count:** {res.word_count}")
+
+                        with st.expander("Raw Pydantic JSON"):
+                            st.json(res.model_dump())
+                    except Exception as e:
+                        st.error(f"Error: {e}")
+            else:
+                st.warning("Please enter some text.")
+
+    elif agent_type == "✅ Fact Checking Agent (FactCheckResult)":
+        claim = st.text_input("Enter claim to verify:", placeholder="e.g. LangChain was released in 2022")
+        if st.button("Check Claim", key="btn_fc"):
+            if claim.strip():
+                with st.spinner("Fact checking..."):
+                    try:
+                        res = run_fact_check(claim)
+                        st.markdown("### ✅ Fact Check Result")
+                        st.metric("Verdict Confidence", f"{res.confidence * 100:.1f}%")
+                        
+                        if res.verdict == "TRUE":
+                            st.success(f"**Verdict:** {res.verdict}")
+                        elif res.verdict == "FALSE":
+                            st.error(f"**Verdict:** {res.verdict}")
+                        else:
+                            st.warning(f"**Verdict:** {res.verdict}")
+                            
+                        st.info(f"**Claim Checked:** {res.claim}")
+                        st.markdown("#### Evidence")
+                        for ev in res.evidence:
+                            st.write(f"- {ev}")
+
+                        with st.expander("Raw Pydantic JSON"):
+                            st.json(res.model_dump())
+                    except Exception as e:
+                        st.error(f"Error: {e}")
+            else:
+                st.warning("Please enter a claim.")
+
+    elif agent_type == "💬 Question Answering Agent (QAResult)":
+        qa_q = st.text_input("Enter question:", placeholder="e.g. How does vector similarity search work?")
+        if st.button("Answer Question", key="btn_qa"):
+            if qa_q.strip():
+                with st.spinner("Answering..."):
+                    try:
+                        res = run_qa(qa_q)
+                        st.markdown("### 💬 QA Result")
+                        st.metric("Confidence Score", f"{res.confidence * 100:.1f}%")
+                        st.success(f"**Answer:** {res.answer}")
+                        st.markdown("#### Reasoning")
+                        st.write(res.reasoning)
+
+                        with st.expander("Raw Pydantic JSON"):
+                            st.json(res.model_dump())
+                    except Exception as e:
+                        st.error(f"Error: {e}")
+            else:
+                st.warning("Please enter a question.")
+
+    elif agent_type == "📄 Report Writing Agent (ReportResult)":
+        topic_report = st.text_input("Enter report topic:", placeholder="e.g. The Impact of RAG on LLM Hallucinations")
+        if st.button("Generate Report", key="btn_report"):
+            if topic_report.strip():
+                with st.spinner("Generating Report..."):
+                    try:
+                        res = run_report(topic_report)
+                        st.markdown(f"## {res.title}")
+                        
+                        for section in res.sections:
+                            heading = section.get("heading", "Section")
+                            content = section.get("content", "")
+                            st.markdown(f"### {heading}")
+                            st.write(content)
+                            
+                        st.markdown("### Conclusion")
+                        st.info(res.conclusion)
+                        
+                        if res.references:
+                            st.markdown("### References")
+                            for ref in res.references:
+                                st.write(f"- {ref}")
+
+                        with st.expander("Raw Pydantic JSON"):
+                            st.json(res.model_dump())
+                    except Exception as e:
+                        st.error(f"Error: {e}")
+            else:
+                st.warning("Please enter a topic.")
 
 st.divider()
 st.caption("Built with LangChain · Gemini · FAISS · Streamlit")
