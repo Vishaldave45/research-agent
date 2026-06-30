@@ -15,12 +15,12 @@ if not os.getenv("GOOGLE_API_KEY"):
     )
 
 llm = ChatGoogleGenerativeAI(
-    model="gemini-2.0-flash-lite",
+    model="gemini-2.5-flash",
     temperature=0.7,
 )
 
 # Lower temperature variant - useful for structured/deterministic tasks (Phase 9+)
 llm_precise = ChatGoogleGenerativeAI(
-    model="gemini-2.0-flash-lite",
+    model="gemini-2.5-flash",
     temperature=0.1,
 )
