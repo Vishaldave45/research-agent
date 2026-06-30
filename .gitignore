@@ -14,3 +14,7 @@ wheels/
 
 # Vector store data
 data/vectorstore/
+
+# Raw documents (keep folder, exclude files)
+data/raw/*
+!data/raw/.gitkeep
