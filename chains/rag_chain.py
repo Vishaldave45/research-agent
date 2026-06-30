@@ -1,0 +1,50 @@
+"""
+Phase 6 - Retrieval-Augmented Generation (RAG)
+Retrieves relevant chunks from FAISS, then answers using only that context.
+"""
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.runnables import RunnableParallel, RunnablePassthrough
+from models.llm import llm
+from models.vectorstore import load_vectorstore
+from prompts.chat_prompt import rag_prompt
+
+
+def _format_docs(docs) -> str:
+    return "\n\n".join(d.page_content for d in docs)
+
+
+def get_rag_chain():
+    """Build the RAG chain. Call this once vectorstore exists on disk."""
+    store = load_vectorstore()
+    retriever = store.as_retriever(search_kwargs={"k": 4})
+
+    chain = (
+        RunnableParallel(
+            context=retriever | _format_docs,
+            question=RunnablePassthrough(),
+        )
+        | rag_prompt
+        | llm
+        | StrOutputParser()
+    )
+    return chain, retriever
+
+
+def ask_with_sources(question: str) -> dict:
+    """Returns both the answer and the source chunks used - good for the API layer."""
+    chain, retriever = get_rag_chain()
+    sources = retriever.invoke(question)
+    answer = chain.invoke(question)
+    return {
+        "answer": answer,
+        "sources": [doc.page_content[:300] for doc in sources],
+    }
+
+
+if __name__ == "__main__":
+    # uv run python -m chains.rag_chain
+    result = ask_with_sources("What is the goal of this project?")
+    print("Answer:", result["answer"])
+    print("\nSources used:")
+    for s in result["sources"]:
+        print("-", s[:100], "...")
