@@ -25,6 +25,8 @@ from chains.structured_chain import (
     ask_structured as run_qa,
     generate_report as run_report,
 )
+from chains.multi_agent_workflow import coordinate
+
 
 
 st.set_page_config(
@@ -34,17 +36,19 @@ st.set_page_config(
 )
 
 st.title("🔎 AI Research Assistant")
-st.caption("LangChain + Gemini + FAISS  ·  Phases 1–10")
+st.caption("LangChain + Gemini + FAISS  ·  Phases 1–12")
 
-tab_chat, tab_memory, tab_upload, tab_rag, tab_structured = st.tabs(
+tab_chat, tab_memory, tab_upload, tab_rag, tab_structured, tab_multi_agent = st.tabs(
     [
         "💬 Basic Chat",
         "🧠 Memory Chat",
         "📄 Upload Documents",
         "📚 Ask Your Documents (RAG)",
         "🧩 Structured Output",
+        "🤖 Multi-Agent Coordinator",
     ]
 )
+
 
 
 # ── Tab 1: Phase 1 - Basic Chatbot ──────────────────────────────────────────
@@ -322,5 +326,89 @@ with tab_structured:
             else:
                 st.warning("Please enter a topic.")
 
+# ── Tab 6: Phase 12 - Multi-Agent Workflow ────────────────────────────────────
+with tab_multi_agent:
+    st.subheader("Multi-Agent Orchestrator")
+    st.caption("A coordinator agent decides which specialized agent is best equipped to handle your query.")
+    
+    multi_query = st.text_input("Enter your request:", placeholder="e.g. Write a report on quantum computing OR verify if water boils at 100 degrees Celsius.")
+    
+    if st.button("Route & Execute", key="btn_multi_agent"):
+        if multi_query.strip():
+            with st.spinner("Coordinator routing query..."):
+                try:
+                    outcome = coordinate(multi_query)
+                    
+                    st.info(f"🤖 **Selected Agent:** {outcome['agent'].upper()}")
+                    st.markdown(f"**Reasoning:** {outcome['reason']}")
+                    
+                    agent_result = outcome["result"]
+                    
+                    st.divider()
+                    st.markdown("### Agent Output")
+                    
+                    if outcome["agent"] == "research":
+                        st.subheader("🔍 Research Result")
+                        st.metric("Confidence", f"{agent_result.confidence * 100:.1f}%")
+                        st.write(f"**Topic:** {agent_result.topic}")
+                        st.markdown("#### Key Findings")
+                        for finding in agent_result.findings:
+                            st.write(f"- {finding}")
+                        if agent_result.sources:
+                            st.markdown("#### Sources")
+                            for src in agent_result.sources:
+                                st.write(f"- {src}")
+                                
+                    elif outcome["agent"] == "summarization":
+                        st.subheader("📝 Summary Result")
+                        st.success(f"**Title:** {agent_result.title}")
+                        st.write(f"**Summary:** {agent_result.summary}")
+                        st.markdown("#### Key Takeaways")
+                        for pt in agent_result.key_points:
+                            st.write(f"- {pt}")
+                        st.write(f"**Original Word Count:** {agent_result.word_count}")
+                        
+                    elif outcome["agent"] == "fact_checking":
+                        st.subheader("✅ Fact Check Result")
+                        st.metric("Verdict Confidence", f"{agent_result.confidence * 100:.1f}%")
+                        if agent_result.verdict == "TRUE":
+                            st.success(f"**Verdict:** {agent_result.verdict}")
+                        elif agent_result.verdict == "FALSE":
+                            st.error(f"**Verdict:** {agent_result.verdict}")
+                        else:
+                            st.warning(f"**Verdict:** {agent_result.verdict}")
+                        st.write(f"**Claim Checked:** {agent_result.claim}")
+                        st.markdown("#### Evidence")
+                        for ev in agent_result.evidence:
+                            st.write(f"- {ev}")
+                            
+                    elif outcome["agent"] == "report_writer":
+                        st.subheader(f"📄 Report: {agent_result.title}")
+                        for section in agent_result.sections:
+                            st.markdown(f"#### {section.get('heading', 'Section')}")
+                            st.write(section.get("content", ""))
+                        st.markdown("#### Conclusion")
+                        st.info(agent_result.conclusion)
+                        if agent_result.references:
+                            st.markdown("#### References")
+                            for ref in agent_result.references:
+                                st.write(f"- {ref}")
+                                
+                    else: # qa
+                        st.subheader("💬 QA Result")
+                        st.metric("Confidence", f"{agent_result.confidence * 100:.1f}%")
+                        st.success(f"**Answer:** {agent_result.answer}")
+                        st.markdown("#### Reasoning")
+                        st.write(agent_result.reasoning)
+                        
+                    with st.expander("Raw Pydantic JSON"):
+                        st.json(agent_result.model_dump())
+                        
+                except Exception as e:
+                    st.error(f"Error: {e}")
+        else:
+            st.warning("Please type a query first.")
+
 st.divider()
 st.caption("Built with LangChain · Gemini · FAISS · Streamlit")
+

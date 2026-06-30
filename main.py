@@ -1,5 +1,5 @@
 """
-Quick manual test runner for Phases 1-11.
+Quick manual test runner for Phases 1-12.
 uv run python main.py
 """
 from chains.chatbot_chain import ask, ask_stream
@@ -11,6 +11,8 @@ from chains.rag_chain import ask_with_sources, ask_with_sources_stream
 from chains.memory_chain import chat, chat_stream
 from chains.agent_chain import run_agent
 from chains.structured_chain import research, summarize, fact_check
+from chains.multi_agent_workflow import coordinate
+
 
 
 
@@ -103,8 +105,20 @@ def main():
         for s in sources:
             print("-", s[:100], "...")
 
+    print("\n" + "=" * 60)
+    print("PHASE 12 - Multi-Agent Workflow")
+    print("=" * 60)
+    
+    print("User query: 'Is Python compiled or interpreted?'")
+    outcome = coordinate("Is Python compiled or interpreted?")
+    print(f"Orchestrator Routed to: {outcome['agent']}")
+    print(f"Reason: {outcome['reason']}")
+    print(f"Verdict: {outcome['result'].verdict}")
+    print(f"Confidence: {outcome['result'].confidence}")
+
 
 if __name__ == "__main__":
     main()
+
 
 

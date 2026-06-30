@@ -66,3 +66,10 @@ class ReportResult(BaseModel):
     conclusion: str = Field(description="Concluding summary")
     references: list[str] = Field(description="References used")
 
+
+class RoutingDecision(BaseModel):
+    selected_agent: str = Field(description="One of: research, summarization, fact_checking, qa, report_writer")
+    routing_reason: str = Field(description="Brief explanation of why this agent was selected")
+    processed_query: str = Field(description="The cleaned/optimized query passed to the target agent")
+
+
