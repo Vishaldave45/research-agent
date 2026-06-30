@@ -35,7 +35,21 @@ def chat(question: str, session_id: str = "default") -> str:
     )
 
 
+def chat_stream(question: str, session_id: str = "default"):
+    """Yield response chunks in real-time with memory history."""
+    for chunk in memory_chain.stream(
+        {"question": question},
+        config={"configurable": {"session_id": session_id}},
+    ):
+        yield chunk
+
+
 if __name__ == "__main__":
     # uv run python -m chains.memory_chain
+    print("Testing chat:")
     print(chat("My favorite programming language is Python.", session_id="test"))
-    print(chat("Generate a short code example.", session_id="test"))
+    print("\nTesting chat_stream:")
+    for chunk in chat_stream("Generate a short code example.", session_id="test"):
+        print(chunk, end="", flush=True)
+    print()
+

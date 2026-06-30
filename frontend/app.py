@@ -12,9 +12,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import streamlit as st
 
-from chains.chatbot_chain import ask
-from chains.memory_chain import chat as memory_chat
-from chains.rag_chain import ask_with_sources
+from chains.chatbot_chain import ask, ask_stream
+from chains.memory_chain import chat as memory_chat, chat_stream
+from chains.rag_chain import ask_with_sources, ask_with_sources_stream
 from loaders.document_loader import load_file
 from loaders.text_splitter import split_documents
 from models.vectorstore import build_vectorstore, add_documents
@@ -57,10 +57,10 @@ with tab_chat:
         if question.strip():
             with st.spinner("Thinking..."):
                 try:
-                    answer = ask(question)
-                    st.success(answer)
+                    st.write_stream(ask_stream(question))
                 except Exception as e:
                     st.error(f"Error: {e}")
+
         else:
             st.warning("Type a question first.")
 
@@ -87,11 +87,13 @@ with tab_memory:
         with st.chat_message("assistant"):
             with st.spinner("Thinking..."):
                 try:
-                    reply = memory_chat(user_msg, session_id=st.session_state.session_id)
-                    st.write(reply)
+                    reply = st.write_stream(
+                        chat_stream(user_msg, session_id=st.session_state.session_id)
+                    )
                     st.session_state.memory_messages.append(("assistant", reply))
                 except Exception as e:
                     st.error(f"Error: {e}")
+
 
     if st.button("Clear conversation"):
         st.session_state.memory_messages = []
@@ -150,20 +152,31 @@ with tab_rag:
     rag_question = st.text_input("Ask a question about your uploaded documents", key="rag_question")
     if st.button("Search & Answer", key="rag_btn"):
         if rag_question.strip():
-            with st.spinner("Retrieving context and generating answer..."):
                 try:
-                    result = ask_with_sources(rag_question)
+                    sources_holder = []
+                    def get_answer_chunks():
+                        for chunk in ask_with_sources_stream(rag_question):
+                            if "sources" in chunk:
+                                sources_holder.extend(chunk["sources"])
+                            elif "answer_chunk" in chunk:
+                                yield chunk["answer_chunk"]
+                                
                     st.markdown("### Answer")
-                    st.success(result["answer"])
+                    st.write_stream(get_answer_chunks())
 
                     st.markdown("### Sources used")
-                    for i, src in enumerate(result["sources"], 1):
-                        with st.expander(f"Source {i}"):
-                            st.write(src)
+                    if sources_holder:
+                        for i, src in enumerate(sources_holder, 1):
+                            with st.expander(f"Source {i}"):
+                                st.write(src)
+                    else:
+                        st.info("No sources retrieved.")
+
                 except FileNotFoundError:
                     st.error("No documents indexed yet. Upload some in the 'Upload Documents' tab first.")
                 except Exception as e:
                     st.error(f"Error: {e}")
+
         else:
             st.warning("Type a question first.")
 

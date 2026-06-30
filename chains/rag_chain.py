@@ -41,10 +41,29 @@ def ask_with_sources(question: str) -> dict:
     }
 
 
+def ask_with_sources_stream(question: str):
+    """Yields sources first, then answer chunks in real-time."""
+    chain, retriever = get_rag_chain()
+    sources = retriever.invoke(question)
+    yield {"sources": [doc.page_content[:300] for doc in sources]}
+    for chunk in chain.stream(question):
+        yield {"answer_chunk": chunk}
+
+
 if __name__ == "__main__":
     # uv run python -m chains.rag_chain
+    print("Testing invoke:")
     result = ask_with_sources("What is the goal of this project?")
     print("Answer:", result["answer"])
     print("\nSources used:")
     for s in result["sources"]:
         print("-", s[:100], "...")
+
+    print("\nTesting stream:")
+    for chunk in ask_with_sources_stream("What is the goal of this project?"):
+        if "sources" in chunk:
+            print("Sources:", chunk["sources"])
+        elif "answer_chunk" in chunk:
+            print(chunk["answer_chunk"], end="", flush=True)
+    print()
+

@@ -15,6 +15,18 @@ def ask(question: str) -> str:
     return basic_chat_chain.invoke({"question": question})
 
 
+def ask_stream(question: str):
+    """Yield response chunks in real-time."""
+    for chunk in basic_chat_chain.stream({"question": question}):
+        yield chunk
+
+
 if __name__ == "__main__":
     # Quick manual test: uv run python -m chains.chatbot_chain
+    print("Testing invoke:")
     print(ask("What is LangChain in one sentence?"))
+    print("\nTesting stream:")
+    for chunk in ask_stream("What is LangChain in one sentence?"):
+        print(chunk, end="", flush=True)
+    print()
+

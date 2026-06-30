@@ -1,24 +1,29 @@
 """
-Quick manual test runner for Phases 1-10.
+Quick manual test runner for Phases 1-11.
 uv run python main.py
 """
-from chains.chatbot_chain import ask
+from chains.chatbot_chain import ask, ask_stream
 from chains.lcel_pipelines import sequential_chain, parallel_chain
 from loaders.document_loader import load_directory
 from loaders.text_splitter import split_documents
 from models.vectorstore import build_vectorstore
-from chains.rag_chain import ask_with_sources
-from chains.memory_chain import chat
+from chains.rag_chain import ask_with_sources, ask_with_sources_stream
+from chains.memory_chain import chat, chat_stream
 from chains.agent_chain import run_agent
 from chains.structured_chain import research, summarize, fact_check
 
 
 
+
 def main():
     print("=" * 60)
-    print("PHASE 1 - Basic Chatbot")
+    print("PHASE 1 - Basic Chatbot (Streaming)")
     print("=" * 60)
-    print(ask("What is LangChain in one sentence?"))
+    for chunk in ask_stream("What is LangChain in one sentence?"):
+        print(chunk, end="", flush=True)
+    print()
+
+
 
     print("\n" + "=" * 60)
     print("PHASE 2 - LCEL Pipelines")
@@ -43,11 +48,21 @@ def main():
         result = ask_with_sources("What is the goal of this project?")
         print(result["answer"])
 
-    print("\n" + "=" * 60)
-    print("PHASE 7 - Memory")
     print("=" * 60)
-    print(chat("My favorite language is Python.", session_id="demo"))
-    print(chat("Give me an example.", session_id="demo"))
+    print("PHASE 7 - Memory (Streaming)")
+    print("=" * 60)
+    print("User: My favorite language is Python.")
+    print("Assistant: ", end="", flush=True)
+    for chunk in chat_stream("My favorite language is Python.", session_id="demo"):
+        print(chunk, end="", flush=True)
+    print()
+    
+    print("\nUser: Give me an example.")
+    print("Assistant: ", end="", flush=True)
+    for chunk in chat_stream("Give me an example.", session_id="demo"):
+        print(chunk, end="", flush=True)
+    print()
+
 
     print("\n" + "=" * 60)
     print("PHASE 8-9 - Agent with Tools")
@@ -72,7 +87,24 @@ def main():
     print(f"Evidence: {fc_struct.evidence}")
     print(f"Confidence: {fc_struct.confidence}")
 
+    print("\n" + "=" * 60)
+    print("PHASE 11 - RAG with Streaming")
+    print("=" * 60)
+    if docs:
+        print("Assistant (Streaming RAG answer): ", end="", flush=True)
+        for chunk in ask_with_sources_stream("What is the goal of this project?"):
+            if "sources" in chunk:
+                # Sources can be displayed later
+                sources = chunk["sources"]
+            elif "answer_chunk" in chunk:
+                print(chunk["answer_chunk"], end="", flush=True)
+        print()
+        print("\nSources used:")
+        for s in sources:
+            print("-", s[:100], "...")
+
 
 if __name__ == "__main__":
     main()
+
 
