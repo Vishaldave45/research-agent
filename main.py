@@ -18,92 +18,92 @@ from chains.multi_agent_workflow import coordinate
 
 
 def main():
-    print("=" * 60)
-    print("PHASE 1 - Basic Chatbot (Streaming)")
-    print("=" * 60)
-    for chunk in ask_stream("What is LangChain in one sentence?"):
-        print(chunk, end="", flush=True)
-    print()
-
-
-
-    print("\n" + "=" * 60)
-    print("PHASE 2 - LCEL Pipelines")
-    print("=" * 60)
-    print(parallel_chain.invoke({"text": "LangChain helps developers build LLM apps."}))
-
-    print("\n" + "=" * 60)
-    print("PHASE 3-5 - Load, Split, Embed, Store")
-    print("=" * 60)
-    docs = load_directory("data/raw")
-    if docs:
-        chunks = split_documents(docs)
-        build_vectorstore(chunks)
-        print(f"Indexed {len(chunks)} chunks from {len(docs)} documents.")
-    else:
-        print("No documents found in data/raw - skipping RAG demo.")
-
-    print("\n" + "=" * 60)
-    print("PHASE 6 - RAG")
-    print("=" * 60)
-    if docs:
-        result = ask_with_sources("What is the goal of this project?")
-        print(result["answer"])
-
-    print("=" * 60)
-    print("PHASE 7 - Memory (Streaming)")
-    print("=" * 60)
-    print("User: My favorite language is Python.")
-    print("Assistant: ", end="", flush=True)
-    for chunk in chat_stream("My favorite language is Python.", session_id="demo"):
-        print(chunk, end="", flush=True)
-    print()
+    # Note: Previous phases commented out to conserve Google API free tier quota (20 requests/day).
+    # You can uncomment them to run individually.
     
-    print("\nUser: Give me an example.")
-    print("Assistant: ", end="", flush=True)
-    for chunk in chat_stream("Give me an example.", session_id="demo"):
-        print(chunk, end="", flush=True)
-    print()
+    # print("=" * 60)
+    # print("PHASE 1 - Basic Chatbot (Streaming)")
+    # print("=" * 60)
+    # for chunk in ask_stream("What is LangChain in one sentence?"):
+    #     print(chunk, end="", flush=True)
+    # print()
 
+    # print("\n" + "=" * 60)
+    # print("PHASE 2 - LCEL Pipelines")
+    # print("=" * 60)
+    # print(parallel_chain.invoke({"text": "LangChain helps developers build LLM apps."}))
 
-    print("\n" + "=" * 60)
-    print("PHASE 8-9 - Agent with Tools")
-    print("=" * 60)
-    result = run_agent("What is 15 * 8, and what's today's date?")
-    print(f"\nAnswer: {result['answer']}")
-    print(f"Tools used: {result['tools_used']}")
+    # print("\n" + "=" * 60)
+    # print("PHASE 3-5 - Load, Split, Embed, Store")
+    # print("=" * 60)
+    # docs = load_directory("data/raw")
+    # if docs:
+    #     chunks = split_documents(docs)
+    #     build_vectorstore(chunks)
+    #     print(f"Indexed {len(chunks)} chunks from {len(docs)} documents.")
+    # else:
+    #     print("No documents found in data/raw - skipping RAG demo.")
 
-    print("\n" + "=" * 60)
-    print("PHASE 10 - Structured Output")
-    print("=" * 60)
-    
-    print("Running Structured Research Chain...")
-    res_struct = research("LangChain Agents")
-    print(f"Topic: {res_struct.topic}")
-    print(f"Findings: {res_struct.findings}")
-    print(f"Confidence: {res_struct.confidence}")
-    
-    print("\nRunning Structured Fact Checking Chain...")
-    fc_struct = fact_check("The Sun is a star.")
-    print(f"Verdict: {fc_struct.verdict}")
-    print(f"Evidence: {fc_struct.evidence}")
-    print(f"Confidence: {fc_struct.confidence}")
+    # print("\n" + "=" * 60)
+    # print("PHASE 6 - RAG")
+    # print("=" * 60)
+    # if docs:
+    #     result = ask_with_sources("What is the goal of this project?")
+    #     print(result["answer"])
 
-    print("\n" + "=" * 60)
-    print("PHASE 11 - RAG with Streaming")
-    print("=" * 60)
-    if docs:
-        print("Assistant (Streaming RAG answer): ", end="", flush=True)
-        for chunk in ask_with_sources_stream("What is the goal of this project?"):
-            if "sources" in chunk:
-                # Sources can be displayed later
-                sources = chunk["sources"]
-            elif "answer_chunk" in chunk:
-                print(chunk["answer_chunk"], end="", flush=True)
-        print()
-        print("\nSources used:")
-        for s in sources:
-            print("-", s[:100], "...")
+    # print("=" * 60)
+    # print("PHASE 7 - Memory (Streaming)")
+    # print("=" * 60)
+    # print("User: My favorite language is Python.")
+    # print("Assistant: ", end="", flush=True)
+    # for chunk in chat_stream("My favorite language is Python.", session_id="demo"):
+    #     print(chunk, end="", flush=True)
+    # print()
+    # 
+    # print("\nUser: Give me an example.")
+    # print("Assistant: ", end="", flush=True)
+    # for chunk in chat_stream("Give me an example.", session_id="demo"):
+    #     print(chunk, end="", flush=True)
+    # print()
+
+    # print("\n" + "=" * 60)
+    # print("PHASE 8-9 - Agent with Tools")
+    # print("=" * 60)
+    # result = run_agent("What is 15 * 8, and what's today's date?")
+    # print(f"\nAnswer: {result['answer']}")
+    # print(f"Tools used: {result['tools_used']}")
+
+    # print("\n" + "=" * 60)
+    # print("PHASE 10 - Structured Output")
+    # print("=" * 60)
+    # 
+    # print("Running Structured Research Chain...")
+    # res_struct = research("LangChain Agents")
+    # print(f"Topic: {res_struct.topic}")
+    # print(f"Findings: {res_struct.findings}")
+    # print(f"Confidence: {res_struct.confidence}")
+    # 
+    # print("\nRunning Structured Fact Checking Chain...")
+    # fc_struct = fact_check("The Sun is a star.")
+    # print(f"Verdict: {fc_struct.verdict}")
+    # print(f"Evidence: {fc_struct.evidence}")
+    # print(f"Confidence: {fc_struct.confidence}")
+
+    # print("\n" + "=" * 60)
+    # print("PHASE 11 - RAG with Streaming")
+    # print("=" * 60)
+    # if docs:
+    #     print("Assistant (Streaming RAG answer): ", end="", flush=True)
+    #     for chunk in ask_with_sources_stream("What is the goal of this project?"):
+    #         if "sources" in chunk:
+    #             # Sources can be displayed later
+    #             sources = chunk["sources"]
+    #         elif "answer_chunk" in chunk:
+    #             print(chunk["answer_chunk"], end="", flush=True)
+    #     print()
+    #     print("\nSources used:")
+    #     for s in sources:
+    #         print("-", s[:100], "...")
 
     print("\n" + "=" * 60)
     print("PHASE 12 - Multi-Agent Workflow")
@@ -113,8 +113,27 @@ def main():
     outcome = coordinate("Is Python compiled or interpreted?")
     print(f"Orchestrator Routed to: {outcome['agent']}")
     print(f"Reason: {outcome['reason']}")
-    print(f"Verdict: {outcome['result'].verdict}")
-    print(f"Confidence: {outcome['result'].confidence}")
+    
+    agent = outcome['agent']
+    result = outcome['result']
+    if agent == "fact_checking":
+        print(f"Verdict: {result.verdict}")
+        print(f"Evidence: {result.evidence}")
+    elif agent == "qa":
+        print(f"Answer: {result.answer}")
+        print(f"Reasoning: {result.reasoning}")
+    elif agent == "research":
+        print(f"Topic: {result.topic}")
+        print(f"Findings: {result.findings}")
+    elif agent == "summarization":
+        print(f"Summary: {result.summary}")
+    elif agent == "report_writer":
+        print(f"Title: {result.title}")
+        print(f"Conclusion: {result.conclusion}")
+        
+    print(f"Confidence: {result.confidence}")
+
+
 
 
 if __name__ == "__main__":

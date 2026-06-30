@@ -35,8 +35,218 @@ st.set_page_config(
     layout="wide",
 )
 
+# ── Custom Styling Injection ──────────────────────────────────────────────────
+st.markdown("""
+<style>
+    /* Import modern premium font */
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+    
+    html, body, [data-testid="stAppViewContainer"] {
+        font-family: 'Outfit', sans-serif !important;
+    }
+
+
+    /* Radial gradient background */
+    .stApp {
+        background: radial-gradient(circle at 50% 50%, #111827 0%, #030712 100%) !important;
+        color: #F3F4F6 !important;
+    }
+    
+    /* Make headers glow with indigo gradient */
+    h1, h2, h3 {
+        background: linear-gradient(135deg, #C7D2FE 0%, #818CF8 50%, #6366F1 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-weight: 800 !important;
+        letter-spacing: -0.025em;
+    }
+    
+    h1 {
+        font-size: 2.8rem !important;
+        padding-bottom: 0.5rem !important;
+    }
+
+    /* Tabs list styled as glassmorphic capsule */
+    div[data-baseweb="tab-list"] {
+        background: rgba(255, 255, 255, 0.02) !important;
+        backdrop-filter: blur(12px) !important;
+        border: 1px solid rgba(255, 255, 255, 0.05) !important;
+        border-radius: 16px !important;
+        padding: 6px !important;
+        margin-bottom: 25px !important;
+        gap: 8px !important;
+    }
+    
+    /* Tab buttons style */
+    button[data-baseweb="tab"] {
+        border-radius: 10px !important;
+        padding: 10px 20px !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        color: #9CA3AF !important;
+        border: none !important;
+    }
+    
+    button[data-baseweb="tab"]:hover {
+        color: #FFFFFF !important;
+        background: rgba(255, 255, 255, 0.04) !important;
+    }
+
+    button[data-baseweb="tab"][aria-selected="true"] {
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(165, 180, 252, 0.15) 100%) !important;
+        border: 1px solid rgba(99, 102, 241, 0.35) !important;
+        color: #FFFFFF !important;
+        font-weight: 600 !important;
+        box-shadow: 0 4px 20px rgba(99, 102, 241, 0.25) !important;
+    }
+    
+    /* Input fields and selectors style */
+    .stTextInput input, .stTextArea textarea, .stSelectbox [data-baseweb="select"] {
+        background-color: rgba(17, 24, 39, 0.8) !important;
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        border-radius: 10px !important;
+        color: #F9FAFB !important;
+        padding: 12px !important;
+        font-size: 1rem !important;
+        transition: all 0.2s ease !important;
+    }
+
+    .stTextInput input:focus, .stTextArea textarea:focus {
+        border-color: #818CF8 !important;
+        box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.25) !important;
+    }
+
+    /* Button enhancements */
+    .stButton>button {
+        background: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%) !important;
+        color: #FFFFFF !important;
+        border: none !important;
+        border-radius: 10px !important;
+        padding: 12px 28px !important;
+        font-weight: 600 !important;
+        font-size: 1rem !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        box-shadow: 0 4px 14px rgba(99, 102, 241, 0.3) !important;
+        width: 100% !important;
+    }
+    
+    .stButton>button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 22px rgba(99, 102, 241, 0.5) !important;
+        background: linear-gradient(135deg, #818CF8 0%, #6366F1 100%) !important;
+    }
+
+    /* Custom containers / cards (st.container border=True) */
+    div[data-testid="stVerticalBlockBorderWrapper"] {
+        background: rgba(255, 255, 255, 0.02) !important;
+        border: 1px solid rgba(255, 255, 255, 0.06) !important;
+        border-radius: 18px !important;
+        padding: 24px !important;
+        backdrop-filter: blur(16px) !important;
+        box-shadow: 0 10px 40px 0 rgba(0, 0, 0, 0.3) !important;
+        margin-bottom: 20px !important;
+        transition: all 0.3s ease !important;
+    }
+    
+    div[data-testid="stVerticalBlockBorderWrapper"]:hover {
+        border-color: rgba(99, 102, 241, 0.2) !important;
+        box-shadow: 0 10px 40px 0 rgba(99, 102, 241, 0.08) !important;
+    }
+
+    /* Metric values custom style */
+    div[data-testid="stMetricValue"] {
+        font-size: 2.2rem !important;
+        font-weight: 800 !important;
+        color: #818CF8 !important;
+    }
+    
+    /* Notification alerts */
+    div[data-testid="stNotification"] {
+        border-radius: 12px !important;
+        background-color: rgba(17, 24, 39, 0.9) !important;
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    }
+    
+    /* Chat message backgrounds */
+    div[data-testid="stChatMessage"] {
+        border-radius: 12px !important;
+        border: 1px solid rgba(255, 255, 255, 0.04) !important;
+        margin-bottom: 10px !important;
+    }
+    
+    div[data-testid="stChatMessage"][data-classname="stChatMessage-user"] {
+        background-color: rgba(99, 102, 241, 0.08) !important;
+    }
+
+    div[data-testid="stChatMessage"][data-classname="stChatMessage-assistant"] {
+        background-color: rgba(255, 255, 255, 0.02) !important;
+    }
+</style>
+""", unsafe_allow_html=True)
+
 st.title("🔎 AI Research Assistant")
 st.caption("LangChain + Gemini + FAISS  ·  Phases 1–12")
+
+# ── Sidebar Configuration ─────────────────────────────────────────────────────
+with st.sidebar:
+    st.subheader("⚙️ System Configuration")
+    
+    # 1. Provider Selectbox
+    if "provider" not in st.session_state:
+        st.session_state.provider = "gemini"
+        
+    provider_choice = st.selectbox(
+        "Select LLM Provider",
+        ["gemini", "groq", "openrouter"],
+        key="provider"
+    )
+    
+    # 2. Dynamic instantiation & caching
+    if st.session_state.get("provider_built") != st.session_state.provider or "active_llm" not in st.session_state:
+        from models.llm import get_llm
+        try:
+            st.session_state.active_llm = get_llm(st.session_state.provider)
+            st.session_state.provider_built = st.session_state.provider
+        except Exception as e:
+            st.error(f"Error loading {st.session_state.provider}: {e}")
+            from langchain_core.language_models.fake import FakeListLLM
+            st.session_state.active_llm = FakeListLLM(responses=[f"Configuration Error: {e}"])
+            st.session_state.provider_built = st.session_state.provider
+            
+    # 3. Read model name dynamically
+    model_name = ""
+    if hasattr(st.session_state.active_llm, "model_name"):
+        model_name = st.session_state.active_llm.model_name
+    elif hasattr(st.session_state.active_llm, "model"):
+        model_name = st.session_state.active_llm.model
+        
+    with st.container(border=True):
+        st.markdown("**Active LLM Engine:**")
+        if model_name:
+            st.info(f"{st.session_state.provider} ({model_name})")
+            st.caption(f"Active: {st.session_state.provider} ({model_name})")
+        else:
+            st.info(f"{st.session_state.provider}")
+            st.caption(f"Active: {st.session_state.provider}")
+        
+        st.markdown("**Embeddings Engine:**")
+        st.info("Gemini Embedding")
+        
+        st.markdown("**Vector Store:**")
+        st.success("FAISS Database")
+
+    st.divider()
+    st.markdown("### 📚 Document Library")
+    try:
+        import os
+        raw_files = os.listdir("data/raw")
+        raw_files = [f for f in raw_files if f != ".gitkeep"]
+        if raw_files:
+            for f in raw_files:
+                st.caption(f"📄 {f}")
+        else:
+            st.caption("No documents uploaded yet.")
+    except Exception:
+        st.caption("No document library found.")
 
 tab_chat, tab_memory, tab_upload, tab_rag, tab_structured, tab_multi_agent = st.tabs(
     [
@@ -61,7 +271,7 @@ with tab_chat:
         if question.strip():
             with st.spinner("Thinking..."):
                 try:
-                    st.write_stream(ask_stream(question))
+                    st.write_stream(ask_stream(question, llm_override=st.session_state.active_llm))
                 except Exception as e:
                     st.error(f"Error: {e}")
 
@@ -92,7 +302,7 @@ with tab_memory:
             with st.spinner("Thinking..."):
                 try:
                     reply = st.write_stream(
-                        chat_stream(user_msg, session_id=st.session_state.session_id)
+                        chat_stream(user_msg, session_id=st.session_state.session_id, llm_override=st.session_state.active_llm)
                     )
                     st.session_state.memory_messages.append(("assistant", reply))
                 except Exception as e:
@@ -108,14 +318,15 @@ with tab_upload:
     st.subheader("Upload Documents")
     st.caption("Supports PDF, TXT, Markdown, and HTML. Files are split into chunks and embedded into FAISS.")
 
-    uploaded_files = st.file_uploader(
-        "Choose files",
-        type=["pdf", "txt", "md", "html", "htm"],
-        accept_multiple_files=True,
-    )
+    with st.container(border=True):
+        uploaded_files = st.file_uploader(
+            "Choose files",
+            type=["pdf", "txt", "md", "html", "htm"],
+            accept_multiple_files=True,
+        )
 
-    chunk_size = st.slider("Chunk size", 200, 2000, 1000, step=100)
-    chunk_overlap = st.slider("Chunk overlap", 0, 500, 200, step=50)
+        chunk_size = st.slider("Chunk size", 200, 2000, 1000, step=100)
+        chunk_overlap = st.slider("Chunk overlap", 0, 500, 200, step=50)
 
     if st.button("Process and index"):
         if not uploaded_files:
@@ -159,7 +370,7 @@ with tab_rag:
                 try:
                     sources_holder = []
                     def get_answer_chunks():
-                        for chunk in ask_with_sources_stream(rag_question):
+                        for chunk in ask_with_sources_stream(rag_question, llm_override=st.session_state.active_llm):
                             if "sources" in chunk:
                                 sources_holder.extend(chunk["sources"])
                             elif "answer_chunk" in chunk:
@@ -180,6 +391,7 @@ with tab_rag:
                     st.error("No documents indexed yet. Upload some in the 'Upload Documents' tab first.")
                 except Exception as e:
                     st.error(f"Error: {e}")
+
 
         else:
             st.warning("Type a question first.")

@@ -6,20 +6,22 @@ from langchain_core.output_parsers import StrOutputParser
 from models.llm import llm
 from prompts.chat_prompt import basic_chat_prompt
 
-# The core chain. This is the pattern every later chain builds on.
-basic_chat_chain = basic_chat_prompt | llm | StrOutputParser()
+def build_basic_chat_chain(llm_instance):
+    return basic_chat_prompt | llm_instance | StrOutputParser()
 
+# Default instance for backwards compatibility / non-UI usage
+basic_chat_chain = build_basic_chat_chain(llm)
 
-def ask(question: str) -> str:
+def ask(question: str, llm_override=None) -> str:
     """Convenience wrapper for direct calls / quick testing."""
-    return basic_chat_chain.invoke({"question": question})
+    chain = build_basic_chat_chain(llm_override) if llm_override else basic_chat_chain
+    return chain.invoke({"question": question})
 
-
-def ask_stream(question: str):
+def ask_stream(question: str, llm_override=None):
     """Yield response chunks in real-time."""
-    for chunk in basic_chat_chain.stream({"question": question}):
+    chain = build_basic_chat_chain(llm_override) if llm_override else basic_chat_chain
+    for chunk in chain.stream({"question": question}):
         yield chunk
-
 
 if __name__ == "__main__":
     # Quick manual test: uv run python -m chains.chatbot_chain
@@ -29,4 +31,3 @@ if __name__ == "__main__":
     for chunk in ask_stream("What is LangChain in one sentence?"):
         print(chunk, end="", flush=True)
     print()
-

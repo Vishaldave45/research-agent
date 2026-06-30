@@ -11,38 +11,38 @@ from prompts.chat_prompt import conversational_prompt
 # In-memory session store. Swap for Redis/DB in production.
 _session_store: dict[str, ChatMessageHistory] = {}
 
-
 def get_session_history(session_id: str) -> ChatMessageHistory:
     if session_id not in _session_store:
         _session_store[session_id] = ChatMessageHistory()
     return _session_store[session_id]
 
+def build_memory_chain(llm_instance):
+    base_chain = conversational_prompt | llm_instance | StrOutputParser()
+    return RunnableWithMessageHistory(
+        base_chain,
+        get_session_history,
+        input_messages_key="question",
+        history_messages_key="history",
+    )
 
-_base_chain = conversational_prompt | llm | StrOutputParser()
+# Default instance for backwards compatibility / non-UI usage
+memory_chain = build_memory_chain(llm)
 
-memory_chain = RunnableWithMessageHistory(
-    _base_chain,
-    get_session_history,
-    input_messages_key="question",
-    history_messages_key="history",
-)
-
-
-def chat(question: str, session_id: str = "default") -> str:
-    return memory_chain.invoke(
+def chat(question: str, session_id: str = "default", llm_override=None) -> str:
+    chain = build_memory_chain(llm_override) if llm_override else memory_chain
+    return chain.invoke(
         {"question": question},
         config={"configurable": {"session_id": session_id}},
     )
 
-
-def chat_stream(question: str, session_id: str = "default"):
+def chat_stream(question: str, session_id: str = "default", llm_override=None):
     """Yield response chunks in real-time with memory history."""
-    for chunk in memory_chain.stream(
+    chain = build_memory_chain(llm_override) if llm_override else memory_chain
+    for chunk in chain.stream(
         {"question": question},
         config={"configurable": {"session_id": session_id}},
     ):
         yield chunk
-
 
 if __name__ == "__main__":
     # uv run python -m chains.memory_chain
@@ -52,4 +52,3 @@ if __name__ == "__main__":
     for chunk in chat_stream("Generate a short code example.", session_id="test"):
         print(chunk, end="", flush=True)
     print()
-

@@ -8,31 +8,32 @@ from models.llm import llm
 from models.vectorstore import load_vectorstore
 from prompts.chat_prompt import rag_prompt
 
-
 def _format_docs(docs) -> str:
     return "\n\n".join(d.page_content for d in docs)
 
-
-def get_rag_chain():
-    """Build the RAG chain. Call this once vectorstore exists on disk."""
+def get_rag_chain_with_llm(llm_instance):
+    """Build the RAG chain with the provided LLM instance."""
     store = load_vectorstore()
     retriever = store.as_retriever(search_kwargs={"k": 4})
-
     chain = (
         RunnableParallel(
             context=retriever | _format_docs,
             question=RunnablePassthrough(),
         )
         | rag_prompt
-        | llm
+        | llm_instance
         | StrOutputParser()
     )
     return chain, retriever
 
+def get_rag_chain():
+    """Build RAG chain using the default LLM (for backwards compatibility)."""
+    return get_rag_chain_with_llm(llm)
 
-def ask_with_sources(question: str) -> dict:
+def ask_with_sources(question: str, llm_override=None) -> dict:
     """Returns both the answer and the source chunks used - good for the API layer."""
-    chain, retriever = get_rag_chain()
+    target_llm = llm_override if llm_override else llm
+    chain, retriever = get_rag_chain_with_llm(target_llm)
     sources = retriever.invoke(question)
     answer = chain.invoke(question)
     return {
@@ -40,15 +41,14 @@ def ask_with_sources(question: str) -> dict:
         "sources": [doc.page_content[:300] for doc in sources],
     }
 
-
-def ask_with_sources_stream(question: str):
+def ask_with_sources_stream(question: str, llm_override=None):
     """Yields sources first, then answer chunks in real-time."""
-    chain, retriever = get_rag_chain()
+    target_llm = llm_override if llm_override else llm
+    chain, retriever = get_rag_chain_with_llm(target_llm)
     sources = retriever.invoke(question)
     yield {"sources": [doc.page_content[:300] for doc in sources]}
     for chunk in chain.stream(question):
         yield {"answer_chunk": chunk}
-
 
 if __name__ == "__main__":
     # uv run python -m chains.rag_chain
@@ -66,4 +66,3 @@ if __name__ == "__main__":
         elif "answer_chunk" in chunk:
             print(chunk["answer_chunk"], end="", flush=True)
     print()
-
